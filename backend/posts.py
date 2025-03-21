@@ -1,3 +1,6 @@
+"""
+A module to handle the blog posts.
+"""
 import logging
 
 logging.basicConfig(
@@ -19,7 +22,7 @@ POSTS = [
 
 def validate_post(post):
     """ Validate the blog post format """
-    logger.debug(f'DEBUG validating post: {post}')  # Log a message
+    logger.debug('DEBUG validating post: %s', post)  # Log a message
     if not isinstance(post, dict):
         return False
     if (not isinstance(post.get('title',""), str)
@@ -29,7 +32,7 @@ def validate_post(post):
         return False
     if len(post.keys()) != 2:
         return False
-    logger.info(f'INFO post validated: {post}')
+    logger.info('INFO post validated: %s', post)
     return True
 
 
@@ -45,7 +48,7 @@ def add_post(new_post):
     new_id = max(int(post.get('id')) + 1 for post in POSTS)
     new_post['id'] = new_id
     POSTS.append(new_post)
-    logger.info(f'INFO new post added: {new_post}')
+    logger.info('INFO new post added: %s', new_post)
     return new_post
 
 
@@ -56,7 +59,7 @@ def get_all():
 
 def delete_post(post_id):
     """ Delete a post """
-    for post in POSTS:
+    for post in list(POSTS):
         if int(post.get('id')) == int(post_id):
             POSTS.remove(post)
             return post

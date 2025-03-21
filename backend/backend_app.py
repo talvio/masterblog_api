@@ -1,3 +1,5 @@
+""" Simple blog post API """
+
 import logging
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -28,7 +30,7 @@ DELETED_POST_MESSAGE = "Post with id {id} has been deleted successfully."
 logging.basicConfig(
     filename='blog_backend.log',  # Specify the log file name
     filemode='a',
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s %(levelname)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
     encoding='utf-8'  # Specify
@@ -40,49 +42,54 @@ CORS(app)  # This will enable CORS for all routes
 
 @app.route('/api/posts', methods=['GET'])
 def get_posts():
+    """ Get all posts and send them through the API """
     return jsonify(posts.get_all())
 
 @app.route('/api/posts', methods=['POST'])
 def add_post():
+    """ Add a new blog post """
     app.logger.info('POST request received for /api/posts')
     new_post = request.get_json()
-    app.logger.debug(f'DEBUG new post: {new_post}')  # Log a message
+    app.logger.debug('DEBUG new post: %s' , new_post)  # Log a message
     added_post = posts.add_post(new_post)
     if added_post is None:
-        app.logger.debug(f'DEBUG new post not accepted.')  # Log a message
+        app.logger.debug('DEBUG new post not accepted.')  # Log a message
         return bad_request("Wrong post format.")
-    else:
-        return jsonify(added_post)
+
+    return jsonify(added_post)
 
 
 @app.route('/api/posts/<int:post_id>', methods=['DELETE'])
 def delete_post(post_id):
-    app.logger.info(f'DELETE request received for /api/posts/{post_id}')
+    """ Delete a blog post """
+    app.logger.info('DELETE request received for /api/posts/%s', post_id)
     deleted_post = posts.delete_post(post_id)
     if deleted_post is None:
-        app.logger.debug(f'DEBUG {post_id} was not deleted.')  # Log a message
+        app.logger.debug('DEBUG %s was not deleted.', post_id)  # Log a message
         return not_found_error("No such post was found.")
-    else:
-        return jsonify({
-            'message': DELETED_POST_MESSAGE.format(id=post_id)
-        })
+
+    return jsonify({
+        'message': DELETED_POST_MESSAGE.format(id=post_id)
+    })
 
 
 @app.route('/api/posts/<int:post_id>', methods=['PUT'])
 def update(post_id):
-    app.logger.info(f'PUT request received for /api/posts/{post_id}')
+    """ Update a blog post """
+    app.logger.info('PUT request received for /api/posts/%s', post_id)
     post_to_update = request.get_json()
-    app.logger.debug(f'DEBUG update post: {post_id} {post_to_update}')
+    app.logger.debug('DEBUG update post: %s %s', post_id, post_to_update)
     updated_post = posts.update_post(post_id, post_to_update)
     if updated_post is None:
-        app.logger.debug(f'DEBUG post update not accepted.')  # Log a message
+        app.logger.debug('DEBUG post update not accepted.')  # Log a message
         return not_found_error("Wrong post format or post not found.")
-    else:
-        return jsonify(updated_post)
+
+    return jsonify(updated_post)
 
 
 @app.errorhandler(400)
 def bad_request(error):
+    """ What to return when someone is accessing the API in a wrong way. """
     response = {
         "error": "Bad Request",
         "message": str(error),
@@ -93,6 +100,10 @@ def bad_request(error):
 
 @app.errorhandler(404)
 def not_found_error(error):
+    """
+    What to return when someone is accessing the API with the wrong post Id or
+    asking for some other resource which does not exist.
+    """
     return jsonify({
         "error": "Bad Request",
         "message": str(error),
@@ -102,6 +113,7 @@ def not_found_error(error):
 
 @app.errorhandler(405)
 def method_not_allowed_error(error):
+    """ What to return when someone is accessing the right API with the wrong method. """
     return jsonify({
         "error": "Bad Request",
         "message": str(error),
