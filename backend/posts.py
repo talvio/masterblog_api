@@ -85,10 +85,20 @@ def update_post(post_id, new_post):
     return post_to_update
 
 
-
 def get_post(post_id):
     """ Find the blog post """
     for post in POSTS:
         if int(post.get('id')) == int(post_id):
             return post
     return None
+
+
+def search_posts(title, content):
+    """ Find the blog posts that match the search criteria """
+    found_posts = []
+    for post in POSTS:
+        if title is not None and title.lower() in post.get('title', "").lower():
+            found_posts.append(post)
+        if content is not None and content.lower() in post.get('content', "").lower():
+            found_posts.append(post)
+    return found_posts

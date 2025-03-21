@@ -45,6 +45,17 @@ def get_posts():
     """ Get all posts and send them through the API """
     return jsonify(posts.get_all())
 
+
+@app.route('/api/posts/search', methods=['GET'])
+def search_posts():
+    """ Get all posts that match the search criteria and send them through the API """
+    # Handle the GET request
+    title = request.args.get('title', None)
+    content = request.args.get('content', None)
+
+    return jsonify(posts.search_posts(title, content))
+
+
 @app.route('/api/posts', methods=['POST'])
 def add_post():
     """ Add a new blog post """
