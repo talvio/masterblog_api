@@ -28,17 +28,25 @@ POSTS = [
 ]
 
 def read_posts(post_file=None):
+    """ Read posts from a json file """
     if post_file is None:
         post_file = POSTS_FILE
-    """ read posts from a json file"""
-    with open(post_file, 'r', encoding='utf-8') as json_file:
-        return json.load(json_file)
+    try:
+        with open(post_file, 'r', encoding='utf-8') as json_file:
+            return json.load(json_file)
+    except FileNotFoundError:
+        save_posts([], post_file)
+        return []
+    except Exception as e:
+        logger.error(f"Error: {e}. Unable to read posts from {post_file}. It is not a json file.")
+        return []
+
 
 def save_posts(posts, post_file=None):
+    """ Saves blog posts to a file """
     if post_file is None:
         post_file = POSTS_FILE
-    """ Saves blog posts to a file """
-    with open(POSTS_FILE, 'w', encoding='utf-8') as json_file:
+    with open(post_file, 'w', encoding='utf-8') as json_file:
         json.dump(posts, json_file)
 
 
