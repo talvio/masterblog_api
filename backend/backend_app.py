@@ -43,7 +43,16 @@ CORS(app)  # This will enable CORS for all routes
 @app.route('/api/posts', methods=['GET'])
 def get_posts():
     """ Get all posts and send them through the API """
-    return jsonify(posts.get_all())
+    sort_by = request.args.get('sort', None)
+    sort_direction = request.args.get('direction', None)
+    all_posts = posts.get_all(sort_by, sort_direction)
+    if all_posts is None and sort_by is None and sort_direction is None:
+        app.logger.debug('DEBUG getting posts failed.')
+        return internal_server_error("Getting posts failed.")
+    elif all_posts is None and (sort_by is not None or sort_direction is not None):
+        app.logger.debug('DEBUG getting sorted posts failed.')
+        return bad_request("Wrong format for sorting posts.")
+    return jsonify(all_posts)
 
 
 @app.route('/api/posts/search', methods=['GET'])
@@ -130,6 +139,14 @@ def method_not_allowed_error(error):
         "message": str(error),
         "instructions": API_INSTRUCTIONS
     }), 405
+
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return jsonify({
+        "error": "Internal Server Error",
+        "message": str(error)
+    }), 500
 
 
 if __name__ == '__main__':

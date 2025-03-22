@@ -45,16 +45,32 @@ def add_post(new_post):
     is_valid =  validate_post(new_post)
     if not is_valid:
         return None
-    new_id = max(int(post.get('id')) + 1 for post in POSTS)
+    if len(POSTS) == 0:
+        new_id = 1
+    else:
+        new_id = max(int(post.get('id')) + 1 for post in POSTS)
     new_post['id'] = new_id
     POSTS.append(new_post)
     logger.info('INFO new post added: %s', new_post)
     return new_post
 
 
-def get_all():
-    """ Return all blog posts """
-    return POSTS
+def get_all(sort_by = None, sort_direction = None):
+    """
+    Return all blog posts.
+    :param sort_by: (str) the blog post sort key
+    :param sort_direction: (str) the blog post sort direction asc/desc
+    """
+    if sort_by is None and sort_direction is None:
+        return POSTS
+    if  sort_by is not None and sort_by not in ['title', 'content']:
+        return None
+    if sort_direction is not None and (sort_direction not in ['asc', 'desc'] or sort_by is None):
+        return None
+    sorted_posts = sorted(POSTS, key = lambda post: post['title'] if sort_by == 'title' else post['content'])
+    if sort_direction == 'desc':
+        sorted_posts.reverse()
+    return sorted_posts
 
 
 def delete_post(post_id):
