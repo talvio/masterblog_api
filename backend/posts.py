@@ -27,6 +27,7 @@ POSTS = [
     {"id": 6, "title": "🤯🤷‍♂️😘👍😴", "author": "Duck", "date": "2024-01-11", "content": "🤯🤷‍♂️😘👍😴"},
 ]
 
+
 def read_posts(post_file=None):
     """ Read posts from a json file """
     if post_file is None:

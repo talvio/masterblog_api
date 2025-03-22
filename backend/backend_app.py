@@ -1,7 +1,6 @@
 """ Simple blog post API """
 
 import logging
-import os
 from pathlib import Path
 import sys
 from flask import Flask, jsonify, request
@@ -18,6 +17,15 @@ API_URL="/static/masterblog.json" # (2) ensure you create this dir and file
 
 API_INSTRUCTIONS = {
     "endpoints": [
+        {
+            "description": "List all posts. Output is paginated.",
+            "method": "GET",
+            "url": "/api/posts",
+            "body": {
+                "title": "Your title for the post",
+                "content": "Your content for the post"
+            }
+        },
         {
             "description": "Add a new blog post",
             "method": "POST",
@@ -44,7 +52,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s %(levelname)s: %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
-    encoding='utf-8'  # Specify
+    encoding='utf-8'
 )
 
 
@@ -54,7 +62,7 @@ swagger_ui_blueprint = get_swaggerui_blueprint(
     SWAGGER_URL,
     API_URL,
     config={
-        'app_name': 'Masterblog API' # (3) You can change this if you like
+        'app_name': 'Masterblog API'
     }
 )
 app.register_blueprint(swagger_ui_blueprint, url_prefix=SWAGGER_URL)
@@ -186,4 +194,5 @@ def paginated_posts(posts_to_paginate):
 
 
 if __name__ == '__main__' and "pytest" not in sys.modules:
+    """ Starts the Flask app if this is the main python file and not run by unit tests."""
     app.run(host="0.0.0.0", port=5002, debug=True)
