@@ -3,8 +3,8 @@
 import logging
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import backend.posts as posts
 from flask_swagger_ui import get_swaggerui_blueprint
+import backend.posts as posts
 
 SWAGGER_URL="/api/docs"  # (1) swagger endpoint e.g. HTTP://localhost:5002/api/docs
 API_URL="/static/masterblog.json" # (2) ensure you create this dir and file
@@ -62,7 +62,7 @@ def get_posts():
     if all_posts is None and sort_by is None and sort_direction is None:
         app.logger.debug('DEBUG getting posts failed.')
         return internal_server_error("Getting posts failed.")
-    elif all_posts is None and (sort_by is not None or sort_direction is not None):
+    if all_posts is None and (sort_by is not None or sort_direction is not None):
         app.logger.debug('DEBUG getting sorted posts failed.')
         return bad_request("Wrong format for sorting posts.")
     return paginated_posts(all_posts)
@@ -158,6 +158,7 @@ def method_not_allowed_error(error):
 
 @app.errorhandler(500)
 def internal_server_error(error):
+    """ Show this when we find something has really gone wrong. """
     return jsonify({
         "error": "Internal Server Error",
         "message": str(error)
@@ -180,5 +181,3 @@ def paginated_posts(posts_to_paginate):
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5002, debug=True)
-
-

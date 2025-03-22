@@ -17,11 +17,11 @@ logger = logging.getLogger(__name__)
 
 POSTS = [
     {"id": 1, "title": "First post", "author": "Someone", "date": "2020-03-25", "content": "This is the first post."},
-    {"id": 2, "title": "Second post", "author": "Someone", "date": "2020-04-20", "content": "This is the second post."},
-    {"id": 3, "title": "Third post", "author": "Someone", "date": "2022-04-11", "content": "This is the third post."},
-    {"id": 4, "title": "012345", "author": "Someone", "date": "2023-09-11", "content": "Ridiculous \\"},
-    {"id": 5, "title": "WWWWWWWW", "author": "Someone", "date": "2024-10-12", "content": "1"},
-    {"id": 6, "title": "🤯🤷‍♂️😘👍😴", "author": "Someone", "date": "2024-01-11", "content": "🤯🤷‍♂️😘👍😴"},
+    {"id": 2, "title": "Second post", "author": "Somebody", "date": "2020-04-20", "content": "This is the second post."},
+    {"id": 3, "title": "Third post", "author": "Jack", "date": "2022-04-11", "content": "This is the third post."},
+    {"id": 4, "title": "012345", "author": "Hugh", "date": "2023-09-11", "content": "Ridiculous \\"},
+    {"id": 5, "title": "WWWWWWWW", "author": "Kurt", "date": "2024-10-12", "content": "1"},
+    {"id": 6, "title": "🤯🤷‍♂️😘👍😴", "author": "Duck", "date": "2024-01-11", "content": "🤯🤷‍♂️😘👍😴"},
 ]
 
 
@@ -53,6 +53,7 @@ def validate_post(post):
 
 
 def validate_post_with_id(post):
+    """ Validate the blog post format when the post has an ID"""
     if post.get('id', None) is None:
         return False
     if not str(post.get('id', 0)).isdigit():
@@ -90,11 +91,19 @@ def get_all(sort_by = None, sort_direction = None):
     """
     if sort_by is None and sort_direction is None:
         return POSTS
-    if  sort_by is not None and sort_by not in ['title', 'content']:
+    if  sort_by is not None and sort_by not in ['title', 'content', 'author', 'date']:
         return None
     if sort_direction is not None and (sort_direction not in ['asc', 'desc'] or sort_by is None):
         return None
-    sorted_posts = sorted(POSTS, key = lambda post: post['title'] if sort_by == 'title' else post['content'])
+    match sort_by:
+        case 'content':
+            sorted_posts = sorted(POSTS, key=lambda post: post['content'])
+        case 'author':
+            sorted_posts = sorted(POSTS, key=lambda post: post['author'])
+        case 'date':
+            sorted_posts = sorted(POSTS, key=lambda post: post['date'])
+        case _:
+            sorted_posts = sorted(POSTS, key = lambda post: post['title'])
     if sort_direction == 'desc':
         sorted_posts.reverse()
     return sorted_posts
@@ -113,16 +122,13 @@ def update_post(post_id, new_post):
     """ Update blog post """
     if not isinstance(new_post, dict):
         return None
-    for key in new_post.keys():
-        if key not in ('title', 'content', 'author', 'date'):
+    for key, value in new_post.items():
+        if (key not in ('title', 'content', 'author', 'date')
+            or not isinstance(value, str)
+            or len(value) == 0):
             return None
     if not validate_date(new_post.get('date', "2025-03-22")):
         return None
-    for value in new_post.values():
-        if not isinstance(value, str):
-            return None
-        if len(value) == 0:
-            return None
     post_to_update = get_post(post_id)
     if post_to_update is None:
         return None
