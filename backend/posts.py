@@ -3,6 +3,8 @@ A module to handle the blog posts.
 """
 import logging
 from datetime import datetime
+import json
+import os.path
 
 logging.basicConfig(
     filename='blog_backend.log',  # Specify the log file name
@@ -14,6 +16,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+POSTS_FILE = os.path.join("data", "posts.json")
 
 POSTS = [
     {"id": 1, "title": "First post", "author": "Someone", "date": "2020-03-25", "content": "This is the first post."},
@@ -23,6 +26,20 @@ POSTS = [
     {"id": 5, "title": "WWWWWWWW", "author": "Kurt", "date": "2024-10-12", "content": "1"},
     {"id": 6, "title": "🤯🤷‍♂️😘👍😴", "author": "Duck", "date": "2024-01-11", "content": "🤯🤷‍♂️😘👍😴"},
 ]
+
+def read_posts(post_file=None):
+    if post_file is None:
+        post_file = POSTS_FILE
+    """ read posts from a json file"""
+    with open(post_file, 'r', encoding='utf-8') as json_file:
+        return json.load(json_file)
+
+def save_posts(posts, post_file=None):
+    if post_file is None:
+        post_file = POSTS_FILE
+    """ Saves blog posts to a file """
+    with open(POSTS_FILE, 'w', encoding='utf-8') as json_file:
+        json.dump(posts, json_file)
 
 
 def validate_date(date_string):
@@ -73,12 +90,14 @@ def add_post(new_post):
     #print(f"post: {new_post} validated as {is_valid}")
     if not is_valid:
         return None
-    if len(POSTS) == 0:
+    all_posts = read_posts()
+    if len(all_posts) == 0:
         new_id = 1
     else:
-        new_id = max(int(post.get('id')) + 1 for post in POSTS)
+        new_id = max(int(post.get('id')) + 1 for post in all_posts)
     new_post['id'] = new_id
-    POSTS.append(new_post)
+    all_posts.append(new_post)
+    save_posts(all_posts)
     logger.info('INFO new post added: %s', new_post)
     return new_post
 
@@ -89,21 +108,22 @@ def get_all(sort_by = None, sort_direction = None):
     :param sort_by: (str) the blog post sort key
     :param sort_direction: (str) the blog post sort direction asc/desc
     """
+    all_posts = read_posts()
     if sort_by is None and sort_direction is None:
-        return POSTS
+        return all_posts
     if  sort_by is not None and sort_by not in ['title', 'content', 'author', 'date']:
         return None
     if sort_direction is not None and (sort_direction not in ['asc', 'desc'] or sort_by is None):
         return None
     match sort_by:
         case 'content':
-            sorted_posts = sorted(POSTS, key=lambda post: post['content'])
+            sorted_posts = sorted(all_posts, key=lambda post: post['content'])
         case 'author':
-            sorted_posts = sorted(POSTS, key=lambda post: post['author'])
+            sorted_posts = sorted(all_posts, key=lambda post: post['author'])
         case 'date':
-            sorted_posts = sorted(POSTS, key=lambda post: post['date'])
+            sorted_posts = sorted(all_posts, key=lambda post: post['date'])
         case _:
-            sorted_posts = sorted(POSTS, key = lambda post: post['title'])
+            sorted_posts = sorted(all_posts, key = lambda post: post['title'])
     if sort_direction == 'desc':
         sorted_posts.reverse()
     return sorted_posts
@@ -111,9 +131,11 @@ def get_all(sort_by = None, sort_direction = None):
 
 def delete_post(post_id):
     """ Delete a post """
-    for post in list(POSTS):
+    all_posts = read_posts()
+    for post in list(all_posts):
         if int(post.get('id')) == int(post_id):
-            POSTS.remove(post)
+            all_posts.remove(post)
+            save_posts(all_posts)
             return post
     return None
 
@@ -129,16 +151,19 @@ def update_post(post_id, new_post):
             return None
     if not validate_date(new_post.get('date', "2025-03-22")):
         return None
-    post_to_update = get_post(post_id)
-    if post_to_update is None:
-        return None
-    post_to_update.update(new_post)
-    return post_to_update
+    all_posts = read_posts()
+    for post in all_posts:
+        if int(post.get('id')) == int(post_id):
+            post.update(new_post)
+            save_posts(all_posts)
+            return post
+    return None
 
 
 def get_post(post_id):
     """ Find the blog post """
-    for post in POSTS:
+    all_posts = read_posts()
+    for post in all_posts:
         if int(post.get('id')) == int(post_id):
             return post
     return None
@@ -147,7 +172,8 @@ def get_post(post_id):
 def search_posts(title, content, author, date):
     """ Find the blog posts that match the search criteria """
     found_posts = []
-    for post in POSTS:
+    all_posts = read_posts()
+    for post in all_posts:
         if title is not None and title.lower() in post.get('title', "").lower():
             found_posts.append(post)
         if content is not None and content.lower() in post.get('content', "").lower():

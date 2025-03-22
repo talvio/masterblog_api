@@ -1,6 +1,13 @@
+import os
+
 import pytest
+from unittest import mock
 import json
+import os.path
 import backend.backend_app
+
+
+TEST_POSTS_FILE = os.path.join("tests", "data", "posts.json")
 
 TEST_POSTS = [
     {"title": "First post", "author": "Someone", "date": "2020-03-25", "content": "This is the first post."},
@@ -26,19 +33,21 @@ def set_posts(client):
     :param client: test client
     :return: None
     """
-    for post_num in range(len(TEST_POSTS) + 20):
-        client.delete(f'/api/posts/{post_num}')
-    for post_num, post in enumerate(TEST_POSTS):
-        response = client.post('/api/posts',
-                                data=json.dumps(post),
-                                content_type='application/json'
-        )
-        assert response.status_code == 200
-
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        for post_num in range(len(TEST_POSTS) + 20):
+            client.delete(f'/api/posts/{post_num}')
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        for post_num, post in enumerate(TEST_POSTS):
+            response = client.post('/api/posts',
+                                    data=json.dumps(post),
+                                    content_type='application/json'
+            )
+            assert response.status_code == 200
 
 
 def test_get_posts(client, set_posts):
-    response = client.get('/api/posts')
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.get('/api/posts')
     assert response.status_code == 200
     #print(response.get_data(as_text=True))  # e.g., '{"posts": [...]}'
     returned_posts = json.loads(response.data)
@@ -50,36 +59,42 @@ def test_get_posts(client, set_posts):
 
 def test_search_posts(client, set_posts):
     search_criteria = {'title': 'second',}
-    response = client.get('/api/posts/search', query_string=search_criteria)
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.get('/api/posts/search', query_string=search_criteria)
     assert response.status_code == 200
     expected_result = TEST_POSTS[1].copy()
     expected_result['id'] = 2
     assert response.json == [expected_result,]
     search_criteria = {'content': 'SeCOnd'}
-    response = client.get('/api/posts/search', query_string=search_criteria)
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.get('/api/posts/search', query_string=search_criteria)
     assert response.status_code == 200
     assert response.json == [expected_result,]
     search_criteria = {'title': '🤷'}
-    response = client.get('/api/posts/search', query_string=search_criteria)
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.get('/api/posts/search', query_string=search_criteria)
     assert response.status_code == 200
     expected_result = TEST_POSTS[5].copy()
     expected_result['id'] = 6
     assert response.json == [expected_result,]
     search_criteria = {'content': 'not in the list'}
-    response = client.get('/api/posts/search', query_string=search_criteria)
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.get('/api/posts/search', query_string=search_criteria)
     assert response.status_code == 200
     assert response.json == []
 
 def test_search_posts_author(client, set_posts):
     search_criteria = {'author': 'Jack'}
-    response = client.get('/api/posts/search', query_string=search_criteria)
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.get('/api/posts/search', query_string=search_criteria)
     assert response.status_code == 200
     assert response.json == [{'author': 'Jack', 'content': '1', 'date': '2024-10-12', 'id': 5, 'title': 'WWWWWWWW'}]
 
 
 def test_search_posts_date(client, set_posts):
     search_criteria = {'date': '2024'}
-    response = client.get('/api/posts/search', query_string=search_criteria)
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.get('/api/posts/search', query_string=search_criteria)
     assert response.status_code == 200
     assert response.json == [
         {'author': 'Jack', 'content': '1', 'date': '2024-10-12', 'id': 5, 'title': 'WWWWWWWW'},
@@ -94,10 +109,11 @@ def test_add_post(client, set_posts):
         'date': '2020-03-25',
         'author': 'Someone',
     }
-    response = client.post('/api/posts',
-                            data=json.dumps(post),
-                            content_type='application/json'
-                           )
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.post('/api/posts',
+                                data=json.dumps(post),
+                                content_type='application/json'
+                               )
     assert response.status_code == 200
     assert response.json == {
         'content': 'Content contentContent contentContent contentContent contentContent content.',
@@ -116,19 +132,21 @@ def test_add_post_wrong_format(client, set_posts):
         'date': '2020-03-25',
         'author': 'Someone',
     }
-    response = client.post('/api/posts',
-                            data=json.dumps(post),
-                            content_type='application/json'
-                           )
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.post('/api/posts',
+                                data=json.dumps(post),
+                                content_type='application/json'
+                               )
     assert response.status_code == 400
     assert '{"error":"Bad Request",' in response.get_data(as_text=True)
     post = {
         'title': 'Title title',
     }
-    response = client.post('/api/posts',
-                           data=json.dumps(post),
-                           content_type='application/json'
-                           )
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.post('/api/posts',
+                               data=json.dumps(post),
+                               content_type='application/json'
+                               )
     assert response.status_code == 400
     assert '{"error":"Bad Request",' in response.get_data(as_text=True)
     post = {
@@ -138,16 +156,18 @@ def test_add_post_wrong_format(client, set_posts):
         'date': '2020-03-25',
         'author': 'Someone',
     }
-    response = client.post('/api/posts',
-                            data=json.dumps(post),
-                            content_type='application/json'
-                           )
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.post('/api/posts',
+                                data=json.dumps(post),
+                                content_type='application/json'
+                               )
     assert response.status_code == 400
     assert '{"error":"Bad Request",' in response.get_data(as_text=True)
 
 
 def test_delete_post(client, set_posts):
-    response = client.delete('/api/posts/1')
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.delete('/api/posts/1')
     assert response.status_code == 200
     #print(response.get_data(as_text=True))  # e.g., '{"posts": [...]}'
     assert response.json == {'message': 'Post with id 1 has been deleted successfully.'}
@@ -155,7 +175,8 @@ def test_delete_post(client, set_posts):
 
 def test_delete_wrong_post(client, set_posts):
     wrong_id = len(TEST_POSTS) + 1
-    response = client.delete(f'/api/posts/{wrong_id}')
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.delete(f'/api/posts/{wrong_id}')
     assert response.status_code == 404
     #print(response.get_data(as_text=True))  # e.g., '{"posts": [...]}'
     assert '{"error":"Bad Request","instructions"' in response.get_data(as_text=True)
@@ -164,10 +185,11 @@ def test_delete_wrong_post(client, set_posts):
 def test_put_empty_post(client, set_posts):
     post_update = {
     }
-    response = client.put('/api/posts/2',
-                          data=json.dumps(post_update),
-                          content_type='application/json'
-                          )
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.put('/api/posts/2',
+                              data=json.dumps(post_update),
+                              content_type='application/json'
+                              )
     assert response.status_code == 200
     assert response.json == {
         "content": "This is the second post.",
@@ -183,10 +205,11 @@ def test_put_post(client, set_posts):
         'title': 'Title title',
         "author": "Somebody",
     }
-    response = client.put('/api/posts/2',
-                            data=json.dumps(post_update),
-                            content_type='application/json'
-                           )
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.put('/api/posts/2',
+                                data=json.dumps(post_update),
+                                content_type='application/json'
+                               )
     assert response.status_code == 200
     assert response.json == {
         "content": "Content content Content.",
@@ -204,10 +227,11 @@ def test_put_wrong_post(client, set_posts):
         "author": "Someone",
         "date": "2020-04-20"
     }
-    response = client.put('/api/posts/42',
-                            data=json.dumps(post_update),
-                            content_type='application/json'
-                           )
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.put('/api/posts/42',
+                                data=json.dumps(post_update),
+                                content_type='application/json'
+                               )
     assert response.status_code == 404
 
 def test_put_wrong_post_wrong_date(client, set_posts):
@@ -217,17 +241,18 @@ def test_put_wrong_post_wrong_date(client, set_posts):
         "author": "Someone",
         "date": "2020-04-32"
     }
-    response = client.put('/api/posts/2',
-                            data=json.dumps(post_update),
-                            content_type='application/json'
-                           )
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.put('/api/posts/2',
+                                data=json.dumps(post_update),
+                                content_type='application/json'
+                               )
     assert response.status_code == 404
 
 
 def test_get_sorted_posts_title(client, set_posts, posts=TEST_POSTS):
     parameters = {'sort': 'title'}
-    response = client.get('/api/posts', query_string=parameters)
-    #response = client.get('/api/posts')
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.get('/api/posts', query_string=parameters)
     assert response.status_code == 200
     #print(response.get_data(as_text=True))  # e.g., '{"posts": [...]}'
     posts = sorted(posts, key=lambda post: post['title'])
@@ -236,9 +261,11 @@ def test_get_sorted_posts_title(client, set_posts, posts=TEST_POSTS):
         assert posts[post_num].get('title') == returned_posts[post_num].get('title')
         assert posts[post_num].get('content') == returned_posts[post_num].get('content')
 
+
 def test_get_sorted_posts_content(client, set_posts, posts=TEST_POSTS):
     parameters = {'sort': 'content'}
-    response = client.get('/api/posts', query_string=parameters)
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.get('/api/posts', query_string=parameters)
     assert response.status_code == 200
     posts = sorted(posts, key=lambda post: post['content'])
     returned_posts = json.loads(response.data)
@@ -246,13 +273,17 @@ def test_get_sorted_posts_content(client, set_posts, posts=TEST_POSTS):
         assert posts[post_num].get('title') == returned_posts[post_num].get('title')
         assert posts[post_num].get('content') == returned_posts[post_num].get('content')
 
+
 def test_get_sorted_posts_content_desc(client, set_posts, posts=TEST_POSTS):
     parameters = {'sort': 'content', 'direction': 'desc'}
-    response = client.get('/api/posts', query_string=parameters)
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.get('/api/posts', query_string=parameters)
     assert response.status_code == 200
     returned_posts = json.loads(response.data)
+    print(returned_posts)
     posts = sorted(posts, key=lambda post: post['content'])
     posts.reverse()
+    print(posts)
     for post_num in range(len(posts)):
         assert posts[post_num].get('title') == returned_posts[post_num].get('title')
         assert posts[post_num].get('content') == returned_posts[post_num].get('content')
@@ -260,11 +291,13 @@ def test_get_sorted_posts_content_desc(client, set_posts, posts=TEST_POSTS):
 
 def test_wrong_sort_fields_get_sorted_posts(client, set_posts, posts=TEST_POSTS):
     parameters = {'sort': 'cont', 'direction': 'desc'}
-    response = client.get('/api/posts', query_string=parameters)
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.get('/api/posts', query_string=parameters)
     assert response.status_code == 400
     assert 'error' in json.loads(response.data)
 
     parameters = {'direction': 'asc'}
-    response = client.get('/api/posts', query_string=parameters)
+    with mock.patch("backend.backend_app.posts.POSTS_FILE", TEST_POSTS_FILE):
+        response = client.get('/api/posts', query_string=parameters)
     assert response.status_code == 400
     assert 'error' in json.loads(response.data)

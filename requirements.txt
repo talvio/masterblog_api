@@ -1,4 +1,5 @@
 pytest
+unittest
 logging
 flask
 flask_cors
