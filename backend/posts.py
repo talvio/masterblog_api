@@ -15,12 +15,12 @@ logger = logging.getLogger(__name__)
 
 
 POSTS = [
-    {"id": 1, "title": "First post", "content": "This is the first post."},
-    {"id": 2, "title": "Second post", "content": "This is the second post."},
-    {"id": 3, "title": "Third post", "content": "This is the third post."},
-    {"id": 4, "title": "012345", "content": "Ridiculous \\"},
-    {"id": 5, "title": "WWWWWWWW", "content": "1"},
-    {"id": 6, "title": "🤯🤷‍♂️😘👍😴", "content": "🤯🤷‍♂️😘👍😴"},
+    {"id": 1, "title": "First post", "author": "Someone", "date": "2020-03-25", "content": "This is the first post."},
+    {"id": 2, "title": "Second post", "author": "Someone", "date": "2020-04-20", "content": "This is the second post."},
+    {"id": 3, "title": "Third post", "author": "Someone", "date": "2022-04-11", "content": "This is the third post."},
+    {"id": 4, "title": "012345", "author": "Someone", "date": "2023-09-11", "content": "Ridiculous \\"},
+    {"id": 5, "title": "WWWWWWWW", "author": "Someone", "date": "2024-10-12", "content": "1"},
+    {"id": 6, "title": "🤯🤷‍♂️😘👍😴", "author": "Someone", "date": "2024-01-11", "content": "🤯🤷‍♂️😘👍😴"},
 ]
 
 
@@ -29,15 +29,25 @@ def validate_post(post):
     logger.debug('DEBUG validating post: %s', post)  # Log a message
     if not isinstance(post, dict):
         return False
-    if (not isinstance(post.get('title',""), str)
-            or not isinstance(post.get('content',""), str)):
-        return False
-    if len(post.get('title',"")) == 0 or len(post.get('content',"")) == 0:
-        return False
-    if len(post.keys()) != 2:
+    for field in ['title', 'author', 'date', 'content']:
+        if not isinstance(post.get(field,""), str):
+            return False
+        if len(post.get(field, "")) == 0:
+            return False
+    if len(post.keys()) != 4:
         return False
     logger.info('INFO post validated: %s', post)
     return True
+
+
+def validate_post_with_id(post):
+    if post.get('id', None) is None:
+        return False
+    if not str(post.get('id', 0)).isdigit():
+        return False
+    post_copy = post.copy()
+    post_copy.pop('id')
+    return validate_post(post_copy)
 
 
 def add_post(new_post):

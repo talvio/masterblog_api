@@ -3,12 +3,12 @@ import json
 import backend.backend_app
 
 TEST_POSTS = [
-    {"title": "First post", "content": "This is the first post."},
-    {"title": "Second post", "content": "This is the second post."},
-    {"title": "Third post", "content": "This is the third post."},
-    {"title": "012345", "content": "Ridiculous \\"},
-    {"title": "WWWWWWWW", "content": "1"},
-    {"title": "🤯🤷‍♂️😘👍😴", "content": "🤯🤷‍♂️😘👍😴"},
+    {"title": "First post", "author": "Someone", "date": "2020-03-25", "content": "This is the first post."},
+    {"title": "Second post", "author": "Someone", "date": "2020-04-20", "content": "This is the second post."},
+    {"title": "Third post", "author": "Someone", "date": "2022-04-11", "content": "This is the third post."},
+    {"title": "012345", "author": "Someone", "date": "2023-09-11", "content": "Ridiculous \\"},
+    {"title": "WWWWWWWW", "author": "Someone", "date": "2024-10-12", "content": "1"},
+    {"title": "🤯🤷‍♂️😘👍😴", "author": "Someone", "date": "2024-01-11", "content": "🤯🤷‍♂️😘👍😴"},
 ]
 
 @pytest.fixture(scope='session')
@@ -70,7 +70,9 @@ def test_search_posts(client, set_posts):
 def test_add_post(client, set_posts):
     post = {
         'content': 'Content contentContent contentContent contentContent contentContent content.',
-        'title': 'Title title'
+        'title': 'Title title',
+        'date': '2020-03-25',
+        'author': 'Someone',
     }
     response = client.post('/api/posts',
                             data=json.dumps(post),
@@ -80,7 +82,9 @@ def test_add_post(client, set_posts):
     assert response.json == {
         'content': 'Content contentContent contentContent contentContent contentContent content.',
         'id': 7,
-        'title': 'Title title'
+        'title': 'Title title',
+        'date': '2020-03-25',
+        'author': 'Someone',
     }
 
 
@@ -88,7 +92,9 @@ def test_add_post_wrong_format(client, set_posts):
     post = {
         'content': 'Content contentContent contentContent contentContent contentContent content.',
         'title': 'Title title',
-        'title2': 'Title title'
+        'title2': 'Title title',
+        'date': '2020-03-25',
+        'author': 'Someone',
     }
     response = client.post('/api/posts',
                             data=json.dumps(post),
@@ -108,7 +114,9 @@ def test_add_post_wrong_format(client, set_posts):
     post = {
         'content': 'Content contentContent contentContent contentContent contentContent content.',
         'title': 'Title title',
-        'id': 3
+        'id': 3,
+        'date': '2020-03-25',
+        'author': 'Someone',
     }
     response = client.post('/api/posts',
                             data=json.dumps(post),
