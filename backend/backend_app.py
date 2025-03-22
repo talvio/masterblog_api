@@ -74,8 +74,10 @@ def search_posts():
     # Handle the GET request
     title = request.args.get('title', None)
     content = request.args.get('content', None)
+    author = request.args.get('author', None)
+    date = request.args.get('date', None)
 
-    return paginated_posts(posts.search_posts(title, content))
+    return paginated_posts(posts.search_posts(title, content, author, date))
 
 
 @app.route('/api/posts', methods=['POST'])

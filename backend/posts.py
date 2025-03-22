@@ -2,6 +2,7 @@
 A module to handle the blog posts.
 """
 import logging
+from datetime import datetime
 
 logging.basicConfig(
     filename='blog_backend.log',  # Specify the log file name
@@ -24,6 +25,15 @@ POSTS = [
 ]
 
 
+def validate_date(date_string):
+    """ Validate that a date in a string format is a valid date in the format yyyy-mm-dd """
+    try:
+        datetime.strptime(date_string, "%Y-%m-%d")
+        return True
+    except ValueError:
+        return False
+
+
 def validate_post(post):
     """ Validate the blog post format """
     logger.debug('DEBUG validating post: %s', post)  # Log a message
@@ -34,6 +44,8 @@ def validate_post(post):
             return False
         if len(post.get(field, "")) == 0:
             return False
+    if not validate_date(post.get('date', "")):
+        return False
     if len(post.keys()) != 4:
         return False
     logger.info('INFO post validated: %s', post)
@@ -57,6 +69,7 @@ def add_post(new_post):
     :return: (dict) the new blog post with the unique id added to it
     """
     is_valid =  validate_post(new_post)
+    #print(f"post: {new_post} validated as {is_valid}")
     if not is_valid:
         return None
     if len(POSTS) == 0:
@@ -103,6 +116,8 @@ def update_post(post_id, new_post):
     for key in new_post.keys():
         if key not in ('title', 'content', 'author', 'date'):
             return None
+    if not validate_date(new_post.get('date', "2025-03-22")):
+        return None
     for value in new_post.values():
         if not isinstance(value, str):
             return None
@@ -123,12 +138,16 @@ def get_post(post_id):
     return None
 
 
-def search_posts(title, content):
+def search_posts(title, content, author, date):
     """ Find the blog posts that match the search criteria """
     found_posts = []
     for post in POSTS:
         if title is not None and title.lower() in post.get('title', "").lower():
             found_posts.append(post)
         if content is not None and content.lower() in post.get('content', "").lower():
+            found_posts.append(post)
+        if author is not None and author.lower() in post.get('author', "").lower():
+            found_posts.append(post)
+        if date is not None and date.lower() in post.get('date', "").lower():
             found_posts.append(post)
     return found_posts

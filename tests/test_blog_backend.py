@@ -4,11 +4,11 @@ import backend.backend_app
 
 TEST_POSTS = [
     {"title": "First post", "author": "Someone", "date": "2020-03-25", "content": "This is the first post."},
-    {"title": "Second post", "author": "Someone", "date": "2020-04-20", "content": "This is the second post."},
+    {"title": "Second post", "author": "Somebody", "date": "2020-04-20", "content": "This is the second post."},
     {"title": "Third post", "author": "Someone", "date": "2022-04-11", "content": "This is the third post."},
-    {"title": "012345", "author": "Someone", "date": "2023-09-11", "content": "Ridiculous \\"},
-    {"title": "WWWWWWWW", "author": "Someone", "date": "2024-10-12", "content": "1"},
-    {"title": "🤯🤷‍♂️😘👍😴", "author": "Someone", "date": "2024-01-11", "content": "🤯🤷‍♂️😘👍😴"},
+    {"title": "012345", "author": "Somebody", "date": "2023-09-11", "content": "Ridiculous \\"},
+    {"title": "WWWWWWWW", "author": "Jack", "date": "2024-10-12", "content": "1"},
+    {"title": "🤯🤷‍♂️😘👍😴", "author": "Somebody", "date": "2024-01-11", "content": "🤯🤷‍♂️😘👍😴"},
 ]
 
 @pytest.fixture(scope='session')
@@ -52,19 +52,39 @@ def test_search_posts(client, set_posts):
     search_criteria = {'title': 'second',}
     response = client.get('/api/posts/search', query_string=search_criteria)
     assert response.status_code == 200
-    assert response.json == [{'content': 'This is the second post.', 'id': 2, 'title': 'Second post'}]
+    expected_result = TEST_POSTS[1].copy()
+    expected_result['id'] = 2
+    assert response.json == [expected_result,]
     search_criteria = {'content': 'SeCOnd'}
     response = client.get('/api/posts/search', query_string=search_criteria)
     assert response.status_code == 200
-    assert response.json == [{'content': 'This is the second post.', 'id': 2, 'title': 'Second post'}]
+    assert response.json == [expected_result,]
     search_criteria = {'title': '🤷'}
     response = client.get('/api/posts/search', query_string=search_criteria)
     assert response.status_code == 200
-    assert response.json == [{"title": "🤯🤷‍♂️😘👍😴", 'id': 6, "content": "🤯🤷‍♂️😘👍😴"}]
+    expected_result = TEST_POSTS[5].copy()
+    expected_result['id'] = 6
+    assert response.json == [expected_result,]
     search_criteria = {'content': 'not in the list'}
     response = client.get('/api/posts/search', query_string=search_criteria)
     assert response.status_code == 200
     assert response.json == []
+
+def test_search_posts_author(client, set_posts):
+    search_criteria = {'author': 'Jack'}
+    response = client.get('/api/posts/search', query_string=search_criteria)
+    assert response.status_code == 200
+    assert response.json == [{'author': 'Jack', 'content': '1', 'date': '2024-10-12', 'id': 5, 'title': 'WWWWWWWW'}]
+
+
+def test_search_posts_date(client, set_posts):
+    search_criteria = {'date': '2024'}
+    response = client.get('/api/posts/search', query_string=search_criteria)
+    assert response.status_code == 200
+    assert response.json == [
+        {'author': 'Jack', 'content': '1', 'date': '2024-10-12', 'id': 5, 'title': 'WWWWWWWW'},
+        {"title": "🤯🤷‍♂️😘👍😴", "author": "Somebody", "date": "2024-01-11", 'id': 6, "content": "🤯🤷‍♂️😘👍😴"}
+    ]
 
 
 def test_add_post(client, set_posts):
@@ -153,7 +173,7 @@ def test_put_empty_post(client, set_posts):
         "content": "This is the second post.",
         "id": 2,
         "title": "Second post",
-        "author": "Someone",
+        "author": "Somebody",
         "date": "2020-04-20"}
 
 
@@ -190,6 +210,19 @@ def test_put_wrong_post(client, set_posts):
                            )
     assert response.status_code == 404
 
+def test_put_wrong_post_wrong_date(client, set_posts):
+    post_update = {
+        "content": "This is the second post.",
+        "title": "Second post",
+        "author": "Someone",
+        "date": "2020-04-32"
+    }
+    response = client.put('/api/posts/2',
+                            data=json.dumps(post_update),
+                            content_type='application/json'
+                           )
+    assert response.status_code == 404
+
 
 def test_get_sorted_posts_title(client, set_posts, posts=TEST_POSTS):
     parameters = {'sort': 'title'}
@@ -197,12 +230,8 @@ def test_get_sorted_posts_title(client, set_posts, posts=TEST_POSTS):
     #response = client.get('/api/posts')
     assert response.status_code == 200
     #print(response.get_data(as_text=True))  # e.g., '{"posts": [...]}'
-    print(TEST_POSTS)
     posts = sorted(posts, key=lambda post: post['title'])
     returned_posts = json.loads(response.data)
-    print(posts)
-    print(returned_posts)
-    #exit()
     for post_num in range(len(posts)):
         assert posts[post_num].get('title') == returned_posts[post_num].get('title')
         assert posts[post_num].get('content') == returned_posts[post_num].get('content')
