@@ -52,7 +52,7 @@ def get_posts():
     elif all_posts is None and (sort_by is not None or sort_direction is not None):
         app.logger.debug('DEBUG getting sorted posts failed.')
         return bad_request("Wrong format for sorting posts.")
-    return jsonify(all_posts)
+    return paginated_posts(all_posts)
 
 
 @app.route('/api/posts/search', methods=['GET'])
@@ -62,7 +62,7 @@ def search_posts():
     title = request.args.get('title', None)
     content = request.args.get('content', None)
 
-    return jsonify(posts.search_posts(title, content))
+    return paginated_posts(posts.search_posts(title, content))
 
 
 @app.route('/api/posts', methods=['POST'])
@@ -149,5 +149,21 @@ def internal_server_error(error):
     }), 500
 
 
+def paginated_posts(posts_to_paginate):
+    """
+    Paginates the posts returned by the API.
+    :param posts_to_paginate: posts to paginate
+    :return: paginated posts in json format
+    """
+    page = int(request.args.get('page', 1))
+    limit = int(request.args.get('limit', 10))
+    start_index = (page - 1) * limit
+    end_index = start_index + limit
+    paginated_posts_list = posts_to_paginate[start_index:end_index]
+    return jsonify(paginated_posts_list)
+
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5002, debug=True)
+
+

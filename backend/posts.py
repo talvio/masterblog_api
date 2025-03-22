@@ -17,6 +17,10 @@ logger = logging.getLogger(__name__)
 POSTS = [
     {"id": 1, "title": "First post", "content": "This is the first post."},
     {"id": 2, "title": "Second post", "content": "This is the second post."},
+    {"id": 3, "title": "Third post", "content": "This is the third post."},
+    {"id": 4, "title": "012345", "content": "Ridiculous \\"},
+    {"id": 5, "title": "WWWWWWWW", "content": "1"},
+    {"id": 6, "title": "🤯🤷‍♂️😘👍😴", "content": "🤯🤷‍♂️😘👍😴"},
 ]
 
 
