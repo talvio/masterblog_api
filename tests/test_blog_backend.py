@@ -1,13 +1,11 @@
-import os
-
 import pytest
 from unittest import mock
 import json
-import os.path
+from pathlib import Path
 import backend.backend_app
 
 
-TEST_POSTS_FILE = os.path.join("tests", "data", "posts.json")
+TEST_POSTS_FILE = Path(__file__).parent / "data/posts.json"
 
 TEST_POSTS = [
     {"title": "First post", "author": "Someone", "date": "2020-03-25", "content": "This is the first post."},

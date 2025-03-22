@@ -1,10 +1,16 @@
 """ Simple blog post API """
 
 import logging
+import os
+from pathlib import Path
+import sys
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_swagger_ui import get_swaggerui_blueprint
-import backend.posts as posts
+try:
+    import backend.posts as posts
+except ModuleNotFoundError:
+    import posts
 
 SWAGGER_URL="/api/docs"  # (1) swagger endpoint e.g. HTTP://localhost:5002/api/docs
 API_URL="/static/masterblog.json" # (2) ensure you create this dir and file
@@ -33,7 +39,7 @@ API_INSTRUCTIONS = {
 DELETED_POST_MESSAGE = "Post with id {id} has been deleted successfully."
 
 logging.basicConfig(
-    filename='blog_backend.log',  # Specify the log file name
+    filename= Path(__file__).parent  / 'log/blog_backend.log',
     filemode='a',
     level=logging.INFO,
     format='%(asctime)s %(levelname)s: %(message)s',
@@ -179,5 +185,5 @@ def paginated_posts(posts_to_paginate):
     return jsonify(paginated_posts_list)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__' and "pytest" not in sys.modules:
     app.run(host="0.0.0.0", port=5002, debug=True)

@@ -1,6 +1,7 @@
 import pytest
 import json
 import os.path
+from pathlib import Path
 import backend.posts as posts
 
 TEST_POSTS_WITH_ID = [
@@ -21,11 +22,11 @@ TEST_POSTS_WITHOUT_ID = [
     {"title": "🤯🤷‍♂️😘👍😴", "author": "Someone", "date": "2024-01-11", "content": "🤯🤷‍♂️😘👍😴"},
 ]
 
-TEST_POSTS_FILE_1 = os.path.join("tests", "data", "posts.json")
-TEST_POSTS_FILE_2 = os.path.join("tests", "data", "posts_no_file.json")
-TEST_POSTS_FILE_3 = os.path.join("tests", "data", "posts_empty_file.json")
-TEST_POSTS_FILE_4 = os.path.join("tests", "data", "posts_wrong_file.json")
-PATH_DOES_NOT_EXIST = os.path.join("tests", "data", "no_dir", "no_dir", "posts_wrong_file.json")
+TEST_POSTS_FILE_1 = Path(__file__).parent / "data/posts.json"
+TEST_POSTS_FILE_2 = Path(__file__).parent / "data/posts_no_file.json"
+TEST_POSTS_FILE_3 = Path(__file__).parent / "data/posts_empty_file.json"
+TEST_POSTS_FILE_4 = Path(__file__).parent / "data/posts_wrong_file.json"
+PATH_DOES_NOT_EXIST = Path(__file__).parent / "no_dir/no_dir/data/posts_no_file.json"
 
 
 @pytest.fixture(scope='session')

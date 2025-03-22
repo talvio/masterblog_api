@@ -4,10 +4,10 @@ A module to handle the blog posts.
 import logging
 from datetime import datetime
 import json
-import os.path
+from pathlib import Path
 
 logging.basicConfig(
-    filename='blog_backend.log',  # Specify the log file name
+    filename= Path(__file__).parent  / 'log/blog_backend.log',
     filemode='a',
     level=logging.DEBUG,
     format='%(asctime)s %(levelname)s: %(message)s',
@@ -16,7 +16,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-POSTS_FILE = os.path.join("data", "posts.json")
+POSTS_FILE = Path(__file__).parent / "data/posts.json"
 
 POSTS = [
     {"id": 1, "title": "First post", "author": "Someone", "date": "2020-03-25", "content": "This is the first post."},
