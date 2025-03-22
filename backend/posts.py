@@ -101,7 +101,7 @@ def update_post(post_id, new_post):
     if not isinstance(new_post, dict):
         return None
     for key in new_post.keys():
-        if key not in ('title', 'content'):
+        if key not in ('title', 'content', 'author', 'date'):
             return None
     for value in new_post.values():
         if not isinstance(value, str):

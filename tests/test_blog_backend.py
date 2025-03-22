@@ -149,26 +149,40 @@ def test_put_empty_post(client, set_posts):
                           content_type='application/json'
                           )
     assert response.status_code == 200
-    assert response.json == {'content': 'This is the second post.', 'id': 2, 'title': 'Second post'}
+    assert response.json == {
+        "content": "This is the second post.",
+        "id": 2,
+        "title": "Second post",
+        "author": "Someone",
+        "date": "2020-04-20"}
 
 
 def test_put_post(client, set_posts):
     post_update = {
         'content': 'Content content Content.',
-        'title': 'Title title'
+        'title': 'Title title',
+        "author": "Somebody",
     }
     response = client.put('/api/posts/2',
                             data=json.dumps(post_update),
                             content_type='application/json'
                            )
     assert response.status_code == 200
-    assert response.json == {'content': 'Content content Content.', 'id': 2, 'title': 'Title title'}
+    assert response.json == {
+        "content": "Content content Content.",
+        "id": 2,
+        "title": "Title title",
+        "author": "Somebody",
+        "date": "2020-04-20"
+    }
 
 
 def test_put_wrong_post(client, set_posts):
     post_update = {
-        'content': 'Content content Content.',
-        'title': 'Title title'
+        "content": "This is the second post.",
+        "title": "Second post",
+        "author": "Someone",
+        "date": "2020-04-20"
     }
     response = client.put('/api/posts/42',
                             data=json.dumps(post_update),
