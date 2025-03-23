@@ -15,34 +15,82 @@ SWAGGER_URL="/api/docs"  # (1) swagger endpoint e.g. HTTP://localhost:5002/api/d
 API_URL="/static/masterblog.json" # (2) ensure you create this dir and file
 
 
-API_INSTRUCTIONS = {
+API_INSTRUCTIONS = API_INSTRUCTIONS = {
     "endpoints": [
         {
             "description": "List all posts. Output is paginated.",
             "method": "GET",
             "url": "/api/posts",
-            "body": {
-                "title": "Your title for the post",
-                "content": "Your content for the post"
+            "query_params": {
+                "sort": "Field to sort by (optional)",
+                "direction": "Sorting direction (asc or desc, optional)",
+                "page": "Page number for pagination (optional, default=1)",
+                "limit": "Number of items per page (optional, default=10)"
             }
         },
         {
-            "description": "Add a new blog post",
+            "description": "Search for posts based on criteria.",
+            "method": "GET",
+            "url": "/api/posts/search",
+            "query_params": {
+                "title": "Search by title (optional)",
+                "content": "Search by content (optional)",
+                "author": "Search by author (optional)",
+                "date": "Search by date (optional)",
+                "page": "Page number for pagination (optional, default=1)",
+                "limit": "Number of items per page (optional, default=10)"
+            }
+        },
+        {
+            "description": "Add a new blog post.",
             "method": "POST",
             "url": "/api/posts",
             "body": {
-                "title": "Your title for the post",
-                "content": "Your content for the post"
+                "title": "Title for the post (mandatory)",
+                "author": "Author for the post (mandatory)",
+                "date": "Date for the post in the format yyyy-mm-dd (mandatory)",
+                "content": "Content for the post (mandatory)"
             }
         },
         {
-            "description": "Delete a blog post",
+            "description": "Delete a blog post.",
             "method": "DELETE",
             "url": "/api/posts/<id>",
-            "note": "<id> should be the blog post ID"
+            "note": "<id> should be the blog post ID."
+        },
+        {
+            "description": "Update a blog post.",
+            "method": "PUT",
+            "url": "/api/posts/<id>",
+            "note": "<id> should be the blog post ID.",
+            "body": {
+                "title": "Updated title for the post (optional)",
+                "author": "Updated author for the post (optional)",
+                "date": "Updated date for the post in the format yyyy-mm-dd (optional)",
+                "content": "Updated content for the post (optional)"
+            }
         }
-    ]
+    ],
+    "error_responses": {
+        "400": {
+            "error": "Bad Request",
+            "message": "Invalid input or request format."
+        },
+        "404": {
+            "error": "Not Found",
+            "message": "Requested resource does not exist."
+        },
+        "405": {
+            "error": "Method Not Allowed",
+            "message": "Wrong HTTP method used for this endpoint."
+        },
+        "500": {
+            "error": "Internal Server Error",
+            "message": "An unexpected error occurred."
+        }
+    }
 }
+
 
 DELETED_POST_MESSAGE = "Post with id {id} has been deleted successfully."
 
@@ -72,6 +120,10 @@ def get_posts():
     """ Get all posts and send them through the API """
     sort_by = request.args.get('sort', None)
     sort_direction = request.args.get('direction', None)
+    app.logger.info('Request to get posts sorted by %s %s.',
+                    sort_by, sort_direction
+
+    )
     all_posts = posts.get_all(sort_by, sort_direction)
     if all_posts is None and sort_by is None and sort_direction is None:
         app.logger.debug('DEBUG getting posts failed.')
@@ -90,7 +142,9 @@ def search_posts():
     content = request.args.get('content', None)
     author = request.args.get('author', None)
     date = request.args.get('date', None)
-
+    app.logger.info('Searching for title:%s author:%s date:%s content:%s.',
+        title, author, date, content
+    )
     return paginated_posts(posts.search_posts(title, content, author, date))
 
 
@@ -99,10 +153,10 @@ def add_post():
     """ Add a new blog post """
     app.logger.info('POST request received for /api/posts')
     new_post = request.get_json()
-    app.logger.debug('DEBUG new post: %s' , new_post)  # Log a message
+    app.logger.info('Add post request: %s', new_post)
     added_post = posts.add_post(new_post)
     if added_post is None:
-        app.logger.debug('DEBUG new post not accepted.')  # Log a message
+        app.logger.debug('New post not accepted: %s.', new_post)  # Log a message
         return bad_request("Wrong post format.")
 
     return jsonify(added_post)
@@ -114,9 +168,9 @@ def delete_post(post_id):
     app.logger.info('DELETE request received for /api/posts/%s', post_id)
     deleted_post = posts.delete_post(post_id)
     if deleted_post is None:
-        app.logger.debug('DEBUG %s was not deleted.', post_id)  # Log a message
+        app.logger.debug('%s was not deleted.', post_id)  # Log a message
         return not_found_error("No such post was found.")
-
+    app.logger.debug('Post %s was deleted.', post_id)
     return jsonify({
         'message': DELETED_POST_MESSAGE.format(id=post_id)
     })
@@ -127,12 +181,16 @@ def update(post_id):
     """ Update a blog post """
     app.logger.info('PUT request received for /api/posts/%s', post_id)
     post_to_update = request.get_json()
-    app.logger.debug('DEBUG update post: %s %s', post_id, post_to_update)
+    app.logger.debug('Update post: %s %s', post_id, post_to_update)
     updated_post = posts.update_post(post_id, post_to_update)
     if updated_post is None:
-        app.logger.debug('DEBUG post update not accepted.')  # Log a message
+        app.logger.debug('Post update not accepted id:%s update:%s.',
+            post_id, post_to_update
+        )
         return not_found_error("Wrong post format or post not found.")
-
+    app.logger.debug('Post update successful: id:%s update:%s.',
+        post_id, post_to_update
+    )
     return jsonify(updated_post)
 
 

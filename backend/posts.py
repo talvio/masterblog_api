@@ -62,7 +62,7 @@ def validate_date(date_string):
 
 def validate_post(post):
     """ Validate the blog post format """
-    logger.debug('DEBUG validating post: %s', post)  # Log a message
+    logger.debug('Validating post: %s', post)  # Log a message
     if not isinstance(post, dict):
         return False
     for field in ['title', 'author', 'date', 'content']:
